@@ -6,5 +6,5 @@ repositories {
 }
 
 dependencies {
-	compile 'com.github.Narusevic:FingerprintManager:v2.0.6'
+	implementation 'com.github.Narusevic:FingerprintManager:v2.0.6'
 }

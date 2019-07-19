@@ -1,12 +1,12 @@
 {
   "name": "nativescript-fingerprint-auth-custom",
-  "version": "6.2.1",
+  "version": "7.0.1",
   "description": "Fork from nativescript-fingerprint-auth to implement custom Android Screen. fingerprint authentication plugin for use in NativeScript apps",
   "main": "fingerprint-auth",
   "nativescript": {
     "platforms": {
-      "android": "2.5.0",
-      "ios": "2.5.0"
+      "android": "5.4.0",
+      "ios": "3.0.0"
     }
   },
   "snapshot": {
@@ -20,8 +20,7 @@
   },
   "scripts": {
     "build": "npm i && tsc",
-    "demo.ios": "npm run preparedemo && cd ../demo && tns run ios --emulator",
-    "demo.ios.device": "npm run preparedemo && cd ../demo && tns platform remove ios && tns run ios",
+    "demo.ios": "npm run preparedemo && cd ../demo && tns run ios",
     "demo.android": "npm run preparedemo && cd ../demo && tns platform remove android && tns run android",
     "test": "npm run tslint && npm run tslint.demo && cd ../demo && tns build ios && tns build android",
     "test.ios": "cd ../demo && tns platform remove ios && tns test ios --emulator",
@@ -66,9 +65,9 @@
   "homepage": "https://github.com/eddyverbruggen/nativescript-fingerprint-auth",
   "readmeFilename": "README.md",
   "devDependencies": {
-    "tns-core-modules": "~4.2.0",
-    "tns-platform-declarations": "~4.2.0",
-    "typescript": "~2.7.0",
-    "tslint": "^5.0.0"
+    "tns-core-modules": "next",
+    "tns-platform-declarations": "next",
+    "typescript": "~3.4.5",
+    "tslint": "^5.17.0"
   }
 }

@@ -1,4 +1,4 @@
-import * as utils from "tns-core-modules/utils/utils";
+import { ios as iOSUtils } from "tns-core-modules/utils/utils";
 import {
   BiometricIDAvailableResult,
   FingerprintAuthApi,
@@ -10,7 +10,6 @@ const keychainItemIdentifier = "TouchIDKey";
 let keychainItemServiceName = null;
 
 export class FingerprintAuth implements FingerprintAuthApi {
-
   available(): Promise<BiometricIDAvailableResult> {
     return new Promise((resolve, reject) => {
       try {
@@ -20,9 +19,8 @@ export class FingerprintAuth implements FingerprintAuthApi {
         resolve({
           any: hasBio,
           touch: hasBio && laContext.biometryType === 1, // LABiometryType.TypeTouchID,
-          face: hasBio && laContext.biometryType === 2, // LABiometryType.TypeFaceID,
+          face: hasBio && laContext.biometryType === 2 // LABiometryType.TypeFaceID,
         });
-
       } catch (ex) {
         console.log(`fingerprint-auth.available: ${ex}`);
         // if no identities are enrolled, there will be an exception (so not using 'reject' here)
@@ -46,7 +44,7 @@ export class FingerprintAuth implements FingerprintAuthApi {
         }
 
         // only supported on iOS9+, so check this.. if not supported just report back as false
-        if (utils.ios.MajorVersion < 9) {
+        if (iOSUtils.MajorVersion < 9) {
           resolve(false);
           return;
         }
@@ -55,12 +53,11 @@ export class FingerprintAuth implements FingerprintAuthApi {
         const state = laContext.evaluatedPolicyDomainState;
         if (state !== null) {
           const stateStr = state.base64EncodedStringWithOptions(0);
-          const standardUserDefaults = utils.ios.getter(NSUserDefaults, NSUserDefaults.standardUserDefaults);
-          const storedState = standardUserDefaults.stringForKey(FingerprintDatabaseStateKey);
+          const storedState = NSUserDefaults.standardUserDefaults.stringForKey(FingerprintDatabaseStateKey);
 
           // Store enrollment
-          standardUserDefaults.setObjectForKey(stateStr, FingerprintDatabaseStateKey);
-          standardUserDefaults.synchronize();
+          NSUserDefaults.standardUserDefaults.setObjectForKey(stateStr, FingerprintDatabaseStateKey);
+          NSUserDefaults.standardUserDefaults.synchronize();
 
           // whenever a finger is added/changed/removed the value of the storedState changes,
           // so compare agains a value we previously stored in the context of this app
@@ -81,12 +78,15 @@ export class FingerprintAuth implements FingerprintAuthApi {
     return new Promise((resolve, reject) => {
       try {
         if (keychainItemServiceName === null) {
-          const bundleID = utils.ios.getter(NSBundle, NSBundle.mainBundle).infoDictionary.objectForKey("CFBundleIdentifier");
+          const bundleID = NSBundle.mainBundle.infoDictionary.objectForKey("CFBundleIdentifier");
           keychainItemServiceName = `${bundleID}.TouchID`;
         }
 
         if (!FingerprintAuth.createKeyChainEntry()) {
-          this.verifyFingerprintWithCustomFallback(options).then(resolve, reject);
+          this.verifyFingerprintWithCustomFallback(options, true).then(
+              resolve,
+              reject
+          );
           return;
         }
 
@@ -96,7 +96,10 @@ export class FingerprintAuth implements FingerprintAuthApi {
         query.setObjectForKey(keychainItemServiceName, kSecAttrService);
 
         // Note that you can only do this for Touch ID; for Face ID you need to tweak the plist value of NSFaceIDUsageDescription
-        query.setObjectForKey(options !== null && options.message || "Scan your finger", kSecUseOperationPrompt);
+        query.setObjectForKey(
+            (options !== null && options.message) || "Scan your finger",
+            kSecUseOperationPrompt
+        );
 
         // Start the query and the fingerprint scan and/or device passcode validation
         const res = SecItemCopyMatching(query, null);
@@ -105,7 +108,6 @@ export class FingerprintAuth implements FingerprintAuthApi {
         } else {
           reject();
         }
-
       } catch (ex) {
         console.log(`Error in fingerprint-auth.verifyFingerprint: ${ex}`);
         reject(ex);
@@ -116,7 +118,10 @@ export class FingerprintAuth implements FingerprintAuthApi {
   /**
    * This implementation uses LocalAuthentication and has no built-in passcode fallback
    */
-  verifyFingerprintWithCustomFallback(options: VerifyFingerprintWithCustomFallbackOptions): Promise<void> {
+  verifyFingerprintWithCustomFallback(
+      options: VerifyFingerprintWithCustomFallbackOptions,
+      usePasscodeFallback = false
+  ): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
         const laContext = LAContext.new();
@@ -125,12 +130,12 @@ export class FingerprintAuth implements FingerprintAuthApi {
           return;
         }
 
-        const message = options !== null && options.message || "Scan your finger";
+        const message = (options !== null && options.message) || "Scan your finger";
         if (options !== null && options.fallbackMessage) {
           laContext.localizedFallbackTitle = options.fallbackMessage;
         }
         laContext.evaluatePolicyLocalizedReasonReply(
-            LAPolicy.DeviceOwnerAuthenticationWithBiometrics,
+            usePasscodeFallback ? LAPolicy.DeviceOwnerAuthentication : LAPolicy.DeviceOwnerAuthenticationWithBiometrics,
             message,
             (ok, error) => {
               if (ok) {
@@ -138,7 +143,7 @@ export class FingerprintAuth implements FingerprintAuthApi {
               } else {
                 reject({
                   code: error.code,
-                  message: error.localizedDescription,
+                  message: error.localizedDescription
                 });
               }
             }
@@ -163,7 +168,6 @@ export class FingerprintAuth implements FingerprintAuthApi {
         null
     );
     if (accessControlRef === null) {
-      // console.log(`Can't store identifier '${keychainItemIdentifier}' in the KeyChain: ${accessControlError}.`);
       console.log(`Can't store identifier '${keychainItemIdentifier}' in the KeyChain.`);
       return false;
     } else {
@@ -177,5 +181,4 @@ export class FingerprintAuth implements FingerprintAuthApi {
       return true;
     }
   }
-
 }
