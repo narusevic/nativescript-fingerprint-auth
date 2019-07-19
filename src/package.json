@@ -1,7 +1,7 @@
 {
-  "name": "nativescript-fingerprint-auth",
-  "version": "6.2.0",
-  "description": "A fingerprint authentication plugin for use in NativeScript apps",
+  "name": "nativescript-fingerprint-auth-custom",
+  "version": "6.2.1",
+  "description": "Fork from nativescript-fingerprint-auth to implement custom Android Screen. fingerprint authentication plugin for use in NativeScript apps",
   "main": "fingerprint-auth",
   "nativescript": {
     "platforms": {
